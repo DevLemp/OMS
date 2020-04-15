@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
     PermissionsMixin
 from django.conf import settings
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -37,14 +38,16 @@ class Movie(models.Model):
     info = models.TextField()
 
     def __str__(self):
-        return self.name
+        return self.title
 
 class User_Movie(models.Model):
     """Model to assign a movie to a user after rental"""
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
-    )
+    A = 'Available'
+    R= 'Returned'
+    STATUS_CHOICES = [(A, 'available'), (R, 'returned')]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    status = models.BinaryField()
-    insert_date = models.DateField()
+    status = models.CharField(choices=STATUS_CHOICES, default=A, max_length=255)
+    price = models.FloatField(default=1)
+    insert_date = models.DateTimeField(default=timezone.now, editable=False)

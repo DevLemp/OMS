@@ -1,3 +1,67 @@
-from django.shortcuts import render
+from rest_framework import viewsets, mixins, generics
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 
-# Create your views here.
+from core.models import Movie, User_Movie
+
+from movie import serializers
+
+
+
+class MovieViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    """Get a list of movies in the database"""
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Movie.objects.all()
+    serializer_class = serializers.MovieSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['category', 'id']
+
+    def get_queryset(self):
+        """Return objects"""
+        return self.queryset.order_by('-id')
+
+        
+class RentViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin):
+    """Rent a movie as user"""
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = User_Movie.objects.exclude(status='available')
+    serializer_class = serializers.User_MovieSerializer
+
+    def get_queryset(self):
+        """Return objects"""
+        print(self.queryset)
+        return self.queryset.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        rental = Movie.objects.get(id=self.request.data['movie'])
+        serializer.save(user=self.request.user, movie=rental)
+
+
+class ReturnViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin):
+    """Return a rented movie"""
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = User_Movie.objects.exclude(status='returned')
+    serializer_class = serializers.User_MovieSerializer
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+
+class PriceViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    """Show the price that the user has to pay for his rentals"""
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = User_Movie.objects.exclude(status='returned')
+    serializer_class = serializers.User_MovieSerializer
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+    
