@@ -1,6 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
-    PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.conf import settings
 from django.utils import timezone
 
@@ -49,5 +48,5 @@ class User_Movie(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     status = models.CharField(choices=STATUS_CHOICES, default=A, max_length=255)
-    price = models.FloatField(default=1)
+    price = models.FloatField(null=True)
     insert_date = models.DateTimeField(default=timezone.now, editable=False)
